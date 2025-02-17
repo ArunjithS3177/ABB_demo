@@ -52,11 +52,17 @@ stages:
         terraform plan -out=tfplan
       displayName: "Terraform Init & Plan"
 
+- stage: checkforapproval
+  displayName: check-for-approval
+  pool: 
+    vmImage: "ubuntu-latest"
+  jobs:
+  - job: approval
+    pool: server
+    timeoutInMinutes: 4320 # job times out in 3 days
+    steps:
     - task: ManualValidation@0
-      displayName: "Approval Step Before Apply"
-      inputs:
-        instructions: "Review the Terraform Plan before Apply."
-        onTimeout: "reject"
+      timeoutInMinutes: 1440 # task times out in 1 day
 
 - stage: TerraformApply
   displayName: "Terraform Apply"
