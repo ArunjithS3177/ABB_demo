@@ -1,0 +1,82 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - main  
+
+pool:
+  vmImage: "ubuntu-latest"
+
+variables:
+  TF_VERSION: "1.5.7"
+
+stages:
+- stage: InstallTerraform
+  displayName: "Install Terraform on Agent"
+  jobs:
+  - job: InstallTerraform
+    steps:
+    - task: Bash@3
+      displayName: "Install Terraform"
+      inputs:
+        targetType: "inline"
+        script: |
+          sudo apt-get update && sudo apt-get install -y wget unzip
+          wget https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+          unzip terraform_$(TF_VERSION)_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          terraform version
+
+- stage: TerraformInitPlan
+  displayName: "Terraform Init & Plan"
+  jobs:
+  - job: Terraform
+    steps:
+    - task: AzureKeyVault@2
+      displayName: "Retrieve SPN Credentials from Key Vault"
+      inputs:
+        azureSubscription: "Azure-Terraform-Connection"
+        keyVaultName: "terraformSecretsforABB"
+        secretsFilter: "spn-tenant-id,spn-client-id,spn-client-secret,subscription-id"
+
+    - script: |
+        export ARM_CLIENT_ID=$(spn-client-id)
+        export ARM_CLIENT_SECRET=$(spn-client-secret)
+        export ARM_TENANT_ID=$(spn-tenant-id)
+        export ARM_SUBSCRIPTION_ID=$(subscription-id)
+        terraform init
+        terraform plan -out=tfplan
+      displayName: "Terraform Init & Plan"
+
+- stage: checkforapproval
+  displayName: check-for-approval
+  pool: 
+    vmImage: "ubuntu-latest"
+  jobs:
+  - job: approval
+    pool: server
+    timeoutInMinutes: 4320 # job times out in 3 days
+    steps:
+    - task: ManualValidation@0
+      timeoutInMinutes: 1440 # task times out in 1 day
+
+- stage: TerraformApply
+  displayName: "Terraform Apply"
+  dependsOn: TerraformInitPlan
+  condition: succeeded()
+  jobs:
+  - job: Apply
+    steps:
+    - checkout: git://YourGitHubRepoName  # Ensures latest code
+    - script: |
+        export ARM_CLIENT_ID=$(spn-client-id)
+        export ARM_CLIENT_SECRET=$(spn-client-secret)
+        export ARM_TENANT_ID=$(spn-tenant-id)
+        export ARM_SUBSCRIPTION_ID=$(spn-subscription-id)
+        terraform apply tfplan
+      displayName: "Terraform Apply"
+
