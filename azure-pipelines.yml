@@ -1,7 +1,4 @@
-trigger:
-  branches:
-    include:
-      - main  
+trigger: none 
 
 pool:
   vmImage: "ubuntu-latest"
@@ -86,8 +83,6 @@ stages:
       displayName: "install Terraform"
       inputs:
         targetType: 'inline'
-  
-        workingDirectory: '$(Build.SourcesDirectory)/infra'
         script: |
           set -e
           sudo apt-get update && sudo apt-get install -y wget unzip
