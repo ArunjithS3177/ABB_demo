@@ -54,12 +54,22 @@ stages:
         pwd
         cd infra
         terraform init
-        terraform plan -out=$(TF_PLAN_PATH)
+        terraform plan out=$(Build.BuildNumber)
+  - task: CopyFiles@2
+    displayName: 'copy terraform plan to artifacts'
+    condition: succeeded()
+    inputs:
+      SourceFolder: '$(Build.SourcesDirectory)/infra'
+      Contents: |
+        $(Build.BuildNumber)
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+ 
+  - task: PublishBuildArtifacts@1
+    displayName: 'publish terraform plan'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'tfplan'
       displayName: "Terraform Init & Plan"
-
-    - publish: $(TF_PLAN_PATH)
-      artifact: tfplan
-      displayName: "Store Terraform Plan"
 
 # ----------------- 3️⃣ Approval Before Apply -----------------
 - stage: CheckForApproval
@@ -81,19 +91,28 @@ stages:
   jobs:
   - job: Apply
     steps:
-    - script: |
-        sudo apt-get update && sudo apt-get install -y wget unzip
-        wget https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
-        unzip terraform_$(TF_VERSION)_linux_amd64.zip
-        sudo mv terraform /usr/local/bin/
-        terraform version
-      displayName: "Install Terraform"
+    - task: Bash@3
+      displayName: "Apply"
+      inputs:
+        targetType: 'inline'
+  
+        workingDirectory: '$(Build.SourcesDirectory)/infra'
+        script: |
+          set -e
+          sudo apt-get update && sudo apt-get install -y wget unzip
+          wget https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
+          unzip terraform_$(TF_VERSION)_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+          terraform version
+
 
     - checkout: self  # Ensures latest code
 
-    - download: current
-      artifact: tfplan
-      displayName: "Download Terraform Plan"
+    - task: DownloadPipelineArtifact@2
+      displayName: 'download terraform plan'
+      inputs:
+        artifactName: 'tfplan'
+        downloadPath: '$(Build.SourcesDirectory)/infra'
 
     - script: |
         export ARM_CLIENT_ID=$(spn-client-id)
