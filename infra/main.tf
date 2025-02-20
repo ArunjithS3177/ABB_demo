@@ -1,3 +1,13 @@
+
+resource "azurerm_log_analytics_workspace" "aks_logs" {
+  name                = "aks-monitor-logs-abb"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+}
+
+
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.aks_cluster_name
   location            = var.location
@@ -14,17 +24,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
     type = "SystemAssigned"
   }
 
-  monitor_metrics {
-    enabled = true  # Enables Azure Monitor Agent (AMA)
-  }
-
-  azure_monitor_profile {
-    metrics {
-      annotations_allowed = ["app.kubernetes.io/name"]
-      collection_interval = 60
-      enabled             = true
-      extra_labels_allowed = ["environment"]
-    }
+  oms_agent {
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.aks_logs.id
   }
 
   tags = {
