@@ -11,20 +11,6 @@ variables:
   TF_PLAN_PATH: "$(Build.SourcesDirectory)/tfplan"
 
 stages:
-# ----------------- 1️⃣ Install Terraform -----------------
-- stage: InstallTerraform
-  displayName: "Install Terraform on Agent"
-  jobs:
-  - job: InstallTerraform
-    steps:
-    - script: |
-        sudo apt-get update && sudo apt-get install -y wget unzip
-        wget https://releases.hashicorp.com/terraform/$(TF_VERSION)/terraform_$(TF_VERSION)_linux_amd64.zip
-        unzip terraform_$(TF_VERSION)_linux_amd64.zip
-        sudo mv terraform /usr/local/bin/
-        terraform version
-      displayName: "Install Terraform"
-
 # ----------------- 2️⃣ Terraform Init & Plan -----------------
 - stage: TerraformInitPlan
   displayName: "Terraform Init & Plan"
@@ -55,22 +41,22 @@ stages:
         cd infra
         terraform init
         terraform plan out=$(Build.BuildNumber)
-  - task: CopyFiles@2
-    displayName: 'copy terraform plan to artifacts'
-    condition: succeeded()
-    inputs:
-      SourceFolder: '$(Build.SourcesDirectory)/infra'
-      Contents: |
-        $(Build.BuildNumber)
-      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    - task: CopyFiles@2
+      displayName: 'copy terraform plan to artifacts'
+      condition: succeeded()
+      inputs:
+        SourceFolder: '$(Build.SourcesDirectory)/infra'
+        Contents: |
+          $(Build.BuildNumber)
+        TargetFolder: '$(Build.ArtifactStagingDirectory)'
  
-  - task: PublishBuildArtifacts@1
-    displayName: 'publish terraform plan'
-    inputs:
-      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'tfplan'
-      displayName: "Terraform Init & Plan"
-
+    - task: PublishBuildArtifacts@1
+      displayName: 'publish terraform plan'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'tfplan'
+        displayName: "Terraform Init & Plan"
+ 
 # ----------------- 3️⃣ Approval Before Apply -----------------
 - stage: CheckForApproval
   displayName: "Check for Approval"
@@ -120,6 +106,7 @@ stages:
         azureSubscription: "Azure-Terraform-Connection"
         keyVaultName: "terraformSecretsforABB"
         secretsFilter: "spn-tenant-id,spn-client-id,spn-client-secret,subscription-id"
+		
     - script: |
         export ARM_CLIENT_ID=$(spn-client-id)
         export ARM_CLIENT_SECRET=$(spn-client-secret)
