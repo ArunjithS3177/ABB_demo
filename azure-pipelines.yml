@@ -78,7 +78,7 @@ stages:
   - job: Apply
     steps:
     - task: Bash@3
-      displayName: "Apply"
+      displayName: "install Terraform"
       inputs:
         targetType: 'inline'
   
@@ -106,11 +106,17 @@ stages:
         azureSubscription: "Azure-Terraform-Connection"
         keyVaultName: "terraformSecretsforABB"
         secretsFilter: "spn-tenant-id,spn-client-id,spn-client-secret,subscription-id"
-		
-    - script: |
-        export ARM_CLIENT_ID=$(spn-client-id)
-        export ARM_CLIENT_SECRET=$(spn-client-secret)
-        export ARM_TENANT_ID=$(spn-tenant-id)
-        export ARM_SUBSCRIPTION_ID=$(subscription-id)
-        terraform apply $(Build.BuildNumber)
+
+
+    - task: Bash@3
       displayName: "Terraform Apply"
+      inputs:
+        targetType: 'inline'
+  
+        workingDirectory: '$(Build.SourcesDirectory)/infra'
+        script: |
+          export ARM_CLIENT_ID=$(spn-client-id)
+          export ARM_CLIENT_SECRET=$(spn-client-secret)
+          export ARM_TENANT_ID=$(spn-tenant-id)
+          export ARM_SUBSCRIPTION_ID=$(subscription-id)
+          terraform apply $(Build.BuildNumber)
