@@ -8,9 +8,4 @@ variable "location" {
 variable "aks_cluster_name" {
   default = "ABB_Demo_Cluster"
 }
-variable "containername" {
-  default = "statefilesabb"
-}
-variable"storageaccountname"{
-  default = "remotebackendabb"
-}
+
