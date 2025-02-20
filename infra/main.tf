@@ -1,13 +1,7 @@
-resource "azurerm_resource_group" "aks_rg" {
-  name     = var.resource_group_name
-  location = var.location
-}
-
-
 resource "azurerm_log_analytics_workspace" "aks_logs" {
   name                = "aks-monitor-logs"
-  location            = azurerm_resource_group.aks_rg.location
-  resource_group_name = azurerm_resource_group.aks_rg.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
   sku                 = "PerGB2018"
   retention_in_days   = 30
 }
@@ -15,8 +9,8 @@ resource "azurerm_log_analytics_workspace" "aks_logs" {
 
 resource "azurerm_kubernetes_cluster" "aks" {
   name                = var.aks_cluster_name
-  location            = azurerm_resource_group.aks_rg.location
-  resource_group_name = azurerm_resource_group.aks_rg.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
   dns_prefix          = "myaks"
 
   default_node_pool {
