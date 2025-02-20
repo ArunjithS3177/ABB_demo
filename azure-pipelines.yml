@@ -120,4 +120,4 @@ stages:
           export ARM_TENANT_ID=$(spn-tenant-id)
           export ARM_SUBSCRIPTION_ID=$(subscription-id)
           terraform init
-          terraform apply 
+          terraform apply $(Build.BuildNumber) -auto-approve
