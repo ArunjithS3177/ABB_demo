@@ -41,10 +41,9 @@ stages:
         pwd
         ls -l  
 
-        cd infra  
-        terraform init
 
-        terraform plan out=$(Build.BuildNumber)
+        terraform -chdir=infra init 
+        terraform -chdir=infra plan -out=$(Build.BuildNumber)
     - task: CopyFiles@2
       displayName: 'copy terraform plan to artifacts'
       condition: succeeded()
