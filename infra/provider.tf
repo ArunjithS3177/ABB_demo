@@ -1,8 +1,8 @@
 terraform {
   backend "azurerm" {
-    resource_group_name  = var.resource_group_name
-    storage_account_name = var.storageaccountname
-    container_name       = var.containername
+    resource_group_name  = "Terraform-ABB-DEMO"
+    storage_account_name = "remotebackendabb"
+    container_name       = "statefilesabb"
     key                  = "terraform.tfstate"
   }
 }
