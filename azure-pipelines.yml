@@ -43,8 +43,8 @@ stages:
           export ARM_TENANT_ID=$(spn-tenant-id)
           export ARM_SUBSCRIPTION_ID=$(subscription-id)
           terraform apply $(Build.BuildNumber)
-          terraform -chdir=infra init 
-          terraform -chdir=infra plan -out=$(Build.BuildNumber)
+          terraform init 
+          terraform plan -out=$(Build.BuildNumber)
 
 
 
@@ -62,7 +62,7 @@ stages:
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)'
         ArtifactName: 'tfplan'
-        displayName: "Terraform Init & Plan"
+        
  
 # ----------------- 3️⃣ Approval Before Apply -----------------
 - stage: CheckForApproval
