@@ -7,7 +7,7 @@ variables:
   TF_VERSION: "1.8.4"
 
 stages:
-# ----------------- 2️⃣ Terraform Init & Plan -----------------
+# ----------------- Terraform Init & Plan -----------------
 - stage: TerraformInitPlan
   displayName: "Terraform Init & Plan"
   jobs:
@@ -59,7 +59,7 @@ stages:
         ArtifactName: 'tfplan'
         
  
-# ----------------- 3️⃣ Approval Before Apply -----------------
+# -----------------  Approval Before Apply -----------------
 - stage: CheckForApproval
   displayName: "Check for Approval"
   pool: server
@@ -71,7 +71,7 @@ stages:
       timeoutInMinutes: 1440  # Task times out in 1 day
       displayName: "Manual Approval"
 
-# ----------------- 4️⃣ Terraform Apply -----------------
+# ----------------- Terraform Apply -----------------
 - stage: TerraformApply
   displayName: "Terraform Apply"
   dependsOn: CheckForApproval
